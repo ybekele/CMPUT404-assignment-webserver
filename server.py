@@ -56,7 +56,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #http_method, http_path, http_version, http_host =
         parsed_request = self.parse_request(self.data)
 
-        # Splits up the contents of the parse request by method, path and type 
+        # Splits up the contents of the parse request by method, path and type
         if parsed_request != None:
             http_method = parsed_request[0]
             http_path = parsed_request[1]
@@ -70,11 +70,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
             # Handles if it is a GET request
             else:
+                print('do something')
 
 
         # Handles if there is an error in parse_request
         else:
-            raise AttributeError
+            print("Request could not be parsed properly")
             return
 
 
