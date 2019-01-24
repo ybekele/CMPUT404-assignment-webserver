@@ -1,5 +1,5 @@
 #  coding: utf-8
-import socketserver
+import socketserver, os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 #
@@ -54,13 +54,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # split the data request into an array of strings
         #http_method, http_path, http_version, http_host =
-        parsed_request = self.parse_request(self.data)
+        returned_request = self.parse_request(self.data)
+        parsed_request = returned_request
 
         # Splits up the contents of the parse request by method, path and type
         if parsed_request != None:
-            http_method = parsed_request[0]
-            http_path = parsed_request[1]
-            http_type = parsed_request[2]
+            http_method = parsed_request[0].decode()
+            http_path = parsed_request[1].decode()
+            http_type = parsed_request[2].decode()
 
 
             # Handles if the request is not a GET request
@@ -69,8 +70,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 return
 
             # Handles if it is a GET request
+            # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serve-a-specific-path
             else:
-                print('do something')
+                directory = os.getcwd()
+                path = directory + http_path + 'www'
+                print("paths")
+                print(path)
+
 
 
         # Handles if there is an error in parse_request
@@ -127,6 +133,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
                         'latin-1', 'strict'))
 
         self.request.sendall(output)
+
+
 
 
 
