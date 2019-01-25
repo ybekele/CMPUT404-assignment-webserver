@@ -155,14 +155,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     #print("handle 200 right here ")
                     print("trying to handle CSS")
                     output = ((("%s %d OK\r\n" %
-                            (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
+                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
                 elif ".html" in path:
                     #print('handle 200 right here for html')
                     print("trying to handle HTML")
                     output = ((("%s %d OK\r\n" %
-                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
+                            (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
                 else:
