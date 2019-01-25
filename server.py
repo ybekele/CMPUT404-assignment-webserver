@@ -56,14 +56,15 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #http_method, http_path, http_version, http_host =
         returned_request = self.parse_request(self.data)
         parsed_request = returned_request
+        path = ""
 
         # Splits up the contents of the parse request by method, path and type
-        if parsed_request != None:
+        if (parsed_request != None) and (type(parsed_request) != bool):
+            #print(parsed_request)
             http_method = parsed_request[0].decode()
             http_path = parsed_request[1].decode()
             http_type = parsed_request[2].decode()
 
-            path = ""
             # Handles if the request is not a GET request
             if http_method != "GET":
                 self.send_code(http_type, 405, path)
@@ -73,9 +74,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
             # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serve-a-specific-path - John Carter
             else:
                 directory = os.getcwd()
-                PREFIX = "/www"
                 # gets the path that the request is trying to go to
-                path = directory + PREFIX + http_path
+                path = directory + '/www' + http_path
 
                 # makes sure that the path actually exists
                 if os.path.exists(path):
@@ -91,6 +91,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # Handles if there is an error in parse_request
         else:
             print("Request could not be parsed properly")
+            http_type = "HTTP/1.1"
+            self.send_code(http_type, 404, path)
             return
 
 
@@ -122,7 +124,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #     except:
         #         print("Error parsing HTTP request")
         #         return
-        print(parsed_request)
+        #print(parsed_request)
         return parsed_request
 
 
@@ -149,18 +151,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 file.close()
 
             # mime types can only be .css or HTML according to specs
-                print("THIS IS THE PATH")
-                print(path)
                 if ".css" in path:
                     #print("handle 200 right here ")
-                    print("trying to handle CSS")
+                    #print("trying to handle CSS")
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
                 elif ".html" in path:
                     #print('handle 200 right here for html')
-                    print("trying to handle HTML")
+                #    print("trying to handle HTML")
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
