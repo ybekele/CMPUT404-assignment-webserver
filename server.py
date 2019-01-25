@@ -50,7 +50,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
+        #print ("Got a request of: %s\n" % self.data)
 
         # split the data request into an array of strings
         #http_method, http_path, http_version, http_host =
@@ -73,9 +73,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
             # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serve-a-specific-path - John Carter
             else:
                 directory = os.getcwd()
-
+                PREFIX = "/www"
                 # gets the path that the request is trying to go to
-                path = directory + http_path + 'www'
+                path = directory + PREFIX + http_path
 
                 # makes sure that the path actually exists
                 if os.path.exists(path):
@@ -149,6 +149,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 file.close()
 
             # mime types can only be .css or HTML according to specs
+                print("THIS IS THE PATH")
+                print(path)
                 if path[-4:] == ".css":
                     #print("handle 200 right here ")
                     output = ((("%s %d OK\r\n" %
