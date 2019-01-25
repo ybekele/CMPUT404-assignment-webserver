@@ -87,7 +87,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
                 # makes sure that the path actually exists
                 if os.path.exists(path):
-                    self.send_code(http_type, 200, path)
+                    if not (path.endswith('/')):
+                        self.send_code(http_type, 301, path)
+
+
+                    else:
+                        self.send_code(http_type, 200, path)
 
 
 
@@ -141,6 +146,18 @@ class MyWebServer(socketserver.BaseRequestHandler):
         return parsed_request
 
 
+    def redirect_301(self, version, code, path):
+        path = path + '/'
+        output = ((("%s %d Moved Permanently\r\n" %
+                 (version, code))+ ("Location %s\n\n" % path)).encode(
+                     'latin-1', 'strict'))
+
+        self.request.sendall(output)
+        self.send_code(version, code, path)
+        return
+
+
+
 
     def send_code(self, version, code, path):
         # HTTP 1.1, 404
@@ -170,12 +187,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     #print("handle 200 right here ")
                     #print("trying to handle CSS")
                     byte_contents = bytes(file_data, 'utf-8')
-                    content_length = sys.getsizeof(byte_contents) 
-                    print("this is my byte size")
-                    print(content_length)
+                    content_length = sys.getsizeof(byte_contents)
+                    #print("this is my byte size")
+                    #print(content_length)
                     output = ((("%s %d OK\r\n" %
-                            (version, code))+  ("Content-Type: text/css\n\nContent-Length: %s\n\n" % content_length) + file_data).encode(
+                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
+                    # output = ((("%s %d OK\r\n" %
+                    #         (version, code))+  ("Content-Type: text/css\n\nContent-Length: %s\n\n" % content_length) + file_data).encode(
+                    #             'latin-1', 'strict'))
+
 
                     print("this is the output")
                     print(output)
@@ -227,7 +248,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
 
 
-        self.request.sendall(output)
+    self.request.sendall(output)
+    return
 
 
 
