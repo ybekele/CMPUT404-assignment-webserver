@@ -151,13 +151,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
             # mime types can only be .css or HTML according to specs
                 print("THIS IS THE PATH")
                 print(path)
-                if path[-4:] == ".css":
+                if ".css" in path:
                     #print("handle 200 right here ")
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
-                elif path[-5:] == ".html":
+                elif ".html" in path:
                     #print('handle 200 right here for html')
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
