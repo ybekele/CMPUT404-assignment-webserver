@@ -1,5 +1,5 @@
 #  coding: utf-8
-import socketserver, os
+import socketserver, os, sys
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 #
@@ -98,8 +98,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # Handles if there is an error in parse_request
         else:
-            print(parsed_request)
-            print("Request could not be parsed properly")
+            #print(parsed_request)
+          #  print("Request could not be parsed properly")
             http_type = "HTTP/1.1"
             self.send_code(http_type, 404, path)
             return
@@ -118,11 +118,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # # splits the request on
         # parsed_request = request.split()
         # return parsed_request
-        print('this is the request')
-        print(request)
+       # print('this is the request')
+       # print(request)
         parsed_request = request.split()
-        print('this is the split request')
-        print(parsed_request)
+      #  print('this is the split request')
+       # print(parsed_request)
 
         if len(parsed_request) == 0:
             return False
@@ -169,10 +169,16 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 if path.endswith(".css"):
                     #print("handle 200 right here ")
                     #print("trying to handle CSS")
-                    content_length = bytes(file_data, 'utf-8')
+                    byte_contents = bytes(file_data, 'utf-8')
+                    content_length = sys.getsizeof(byte_contents) 
+                    print("this is my byte size")
+                    print(content_length)
                     output = ((("%s %d OK\r\n" %
-                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
+                            (version, code))+  ("Content-Type: text/css\n\nContent-Length: %s\n\n" % content_length) + file_data).encode(
                                 'latin-1', 'strict'))
+
+                    print("this is the output")
+                    print(output)
 
                 elif path.endswith(".html"):
                     #print('handle 200 right here for html')
