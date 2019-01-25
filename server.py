@@ -55,6 +55,7 @@ import socketserver, os
 # Austin Pennyfeather told me about decode because when parsing originally I was wondering what the b in b'GET'.
 # He told me it use the .decode() method to remove that
 #https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301 - redirect if it doesn't end with /
+#
 class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
@@ -99,6 +100,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # Handles if there is an error in parse_request
         else:
+            print(parsed_request)
             print("Request could not be parsed properly")
             http_type = "HTTP/1.1"
             self.send_code(http_type, 404, path)
@@ -118,7 +120,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # # splits the request on
         # parsed_request = request.split()
         # return parsed_request
+        print('this is the request')
+        print(request)
         parsed_request = request.split()
+        print('this is the split request')
+        print(parsed_request)
 
         if len(parsed_request) == 0:
             return False
@@ -176,6 +182,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                             (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
+
                 else:
                     # send 404 code if we can't recognize the file
                     output = (("%s %d %s\r\n" %
@@ -184,7 +191,19 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
 # bad practice in how i'm handling this , should probably the way program finds file vs. directory and have a seperate function to send codes
 # will fix after
+
+#source : https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301
+#301
+# Header:
+#HTTP/1.1 301 Moved Permanently
+#Location: http://www.example.org/index.asp
             elif os.path.isdir(path):
+
+                # if (not(path.endswith('/'))):
+                #     output = ((("%s %d Moved Permanently\r\n" %
+                #             (version, 301)) + ("Location: %s\n\n" % (path + '/'))).encode(
+                #                 'latin-1', 'strict'))
+                # else:
                 path = path + ("/index.html")
                 if os.path.isfile(path):
                     file = open(path)
@@ -194,6 +213,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
+
                 else:
                     output = (("%s %d %s\r\n" %
                             (version, 404, "Not Found")).encode(
