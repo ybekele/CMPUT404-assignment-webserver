@@ -63,19 +63,28 @@ class MyWebServer(socketserver.BaseRequestHandler):
             http_path = parsed_request[1].decode()
             http_type = parsed_request[2].decode()
 
-
+            path = ""
             # Handles if the request is not a GET request
             if http_method != "GET":
-                self.send_error(http_type, 405)
+                self.send_code(http_type, 405, path)
                 return
 
             # Handles if it is a GET request
-            # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serve-a-specific-path
+            # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serve-a-specific-path - John Carter
             else:
                 directory = os.getcwd()
+
+                # gets the path that the request is trying to go to
                 path = directory + http_path + 'www'
-                print("paths")
-                print(path)
+
+                # makes sure that the path actually exists
+                if os.path.exists(path):
+                    self.send_code(http_type, 200, path)
+
+
+
+                else:
+                    self.send_code(http_type, 404, path)
 
 
 
@@ -118,21 +127,69 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
 
 
-    def send_error(self, version, error_code):
+    def send_code(self, version, code, path):
         # HTTP 1.1, 404
 
-        if error_code == 405:
+        if code == 405:
             output = (("%s %d %s\r\n" %
-                    (version, error_code, "Method Not Allowed")).encode(
+                    (version, code, "Method Not Allowed")).encode(
                         'latin-1', 'strict'))
 
 
-        if error_code == 404:
+        elif code == 404:
             output = (("%s %d %s\r\n" %
-                    (version, error_code, "Not Found")).encode(
+                    (version, code, "Not Found")).encode(
                         'latin-1', 'strict'))
+
+        elif code == 200:
+            # is the path a file ?
+            if os.path.isfile(path):
+                file = open(path)
+                file_data = file.read()
+                file.close()
+
+            # mime types can only be .css or HTML according to specs
+                if path[-4:] == ".css":
+                    #print("handle 200 right here ")
+                    output = ((("%s %d OK\r\n" %
+                            (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
+                                'latin-1', 'strict'))
+
+                elif path[-5:] == ".html":
+                    #print('handle 200 right here for html')
+                    output = ((("%s %d OK\r\n" %
+                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
+                                'latin-1', 'strict'))
+
+                else:
+                    # send 404 code if we can't recognize the file
+                    output = (("%s %d %s\r\n" %
+                            (version, 404, "Not Found")).encode(
+                                'latin-1', 'strict'))
+
+# bad practice in how i'm handling this , should probably the way program finds file vs. directory and have a seperate function to send codes
+# will fix after
+            elif os.path.isdir(path):
+                path = path + ("/index.html")
+                if os.path.isfile(path):
+                    file = open(path)
+                    file_data = file.read()
+                    file.close()
+
+                    output = ((("%s %d OK\r\n" %
+                            (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
+                                'latin-1', 'strict'))
+                else:
+                    output = (("%s %d %s\r\n" %
+                            (version, 404, "Not Found")).encode(
+                                'latin-1', 'strict'))
+
+
+
 
         self.request.sendall(output)
+
+
 
 
 
