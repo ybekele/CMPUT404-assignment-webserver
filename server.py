@@ -46,6 +46,15 @@ import socketserver, os
 # Connection: Closed
 
 
+# ALL SOURCES :
+# https://github.com/python/cpython/blob/master/Lib/http/server.py#L147 (class BaseHTTPRequestHandler)
+# - used this source mainly how to parse and handle outputs. Probably the source that I benefitted most from
+# https://ruslanspivak.com/lsbaws-part1/ - this source helped in understanding what I'm sending as output
+# https://www.tutorialspoint.com/http/http_message_examples.htm - Just for more understanding
+# https://www.acmesystems.it/python_http - How to handle HTML & CSS files. By checking path endswith(mimetype), in our case .html or .class
+# Austin Pennyfeather told me about decode because when parsing originally I was wondering what the b in b'GET'.
+# He told me it use the .decode() method to remove that
+#https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301 - redirect if it doesn't end with /
 class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
@@ -132,17 +141,19 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def send_code(self, version, code, path):
         # HTTP 1.1, 404
 
+        # Handle 405
         if code == 405:
             output = (("%s %d %s\r\n" %
                     (version, code, "Method Not Allowed")).encode(
                         'latin-1', 'strict'))
 
-
+        # Handle 404
         elif code == 404:
             output = (("%s %d %s\r\n" %
                     (version, code, "Not Found")).encode(
                         'latin-1', 'strict'))
 
+        # Handle 200
         elif code == 200:
             # is the path a file ?
             if os.path.isfile(path):
@@ -151,14 +162,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 file.close()
 
             # mime types can only be .css or HTML according to specs
-                if ".css" in path:
+                if path.endswith(".css"):
                     #print("handle 200 right here ")
                     #print("trying to handle CSS")
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
-                elif ".html" in path:
+                elif path.endswith(".html"):
                     #print('handle 200 right here for html')
                 #    print("trying to handle HTML")
                     output = ((("%s %d OK\r\n" %
