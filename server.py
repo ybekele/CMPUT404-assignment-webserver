@@ -52,8 +52,6 @@ import socketserver, os
 # https://ruslanspivak.com/lsbaws-part1/ - this source helped in understanding what I'm sending as output
 # https://www.tutorialspoint.com/http/http_message_examples.htm - Just for more understanding
 # https://www.acmesystems.it/python_http - How to handle HTML & CSS files. By checking path endswith(mimetype), in our case .html or .class
-# Austin Pennyfeather told me about decode because when parsing originally I was wondering what the b in b'GET'.
-# He told me it use the .decode() method to remove that
 #https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301 - redirect if it doesn't end with /
 #
 class MyWebServer(socketserver.BaseRequestHandler):
@@ -171,6 +169,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 if path.endswith(".css"):
                     #print("handle 200 right here ")
                     #print("trying to handle CSS")
+                    content_length = bytes(file_data, 'utf-8')
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
