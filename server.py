@@ -1,5 +1,5 @@
 #  coding: utf-8
-import socketserver, os
+import socketserver, os, sys
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 #
@@ -161,15 +161,23 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
             # mime types can only be .css or HTML according to specs
                 if path.endswith(".css"):
-                    #print("handle 200 right here ")
-                    #print("trying to handle CSS")
+                    byte_contents = bytes(file_data, 'utf-8')
+                    content_length = sys.getsizeof(byte_contents) 
+                    # output = ((("%s %d OK\r\n" %
+                    #         (version, code))+ ("Content-Type: text/css\r\nContent-Length: %s\n\n" % (content_length)) + file_data).encode(
+                    #             'latin-1', 'strict'))
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
 
                 elif path.endswith(".html"):
+                    byte_contents = bytes(file_data, 'utf-8')
+                    content_length = sys.getsizeof(byte_contents) 
                     #print('handle 200 right here for html')
                 #    print("trying to handle HTML")
+                    # output = ((("%s %d OK\r\n" %
+                    #         (version, code))+  ("Content-Type: text/html\r\nContent-Length: %s\n\n" % (content_length)) + file_data).encode(
+                    #             'latin-1', 'strict'))
                     output = ((("%s %d OK\r\n" %
                             (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
                                 'latin-1', 'strict'))
@@ -210,8 +218,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def redirect_301(self, version, code, path):
         path = path + '/'
         output = ((("%s %d Moved Permanently\r\n" %
-                 (version, code))+ ("Location %s\n\n" % path)).encode(
-                     "'latin-1', 'strict'"))
+                 (version, code))+ ("Location %s\n\n" % path)).encode('utf-8'))
 
         self.request.sendall(output)
         #self.handle_200(version, code, path)
