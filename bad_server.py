@@ -1,5 +1,5 @@
 #  coding: utf-8
-import socketserver, os
+import socketserver, os, sys
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 #
@@ -53,6 +53,7 @@ import socketserver, os
 # https://www.tutorialspoint.com/http/http_message_examples.htm - Just for more understanding
 # https://www.acmesystems.it/python_http - How to handle HTML & CSS files. By checking path endswith(mimetype), in our case .html or .class
 #https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301 - redirect if it doesn't end with /
+#
 class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
@@ -74,7 +75,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
             # Handles if the request is not a GET request
             if http_method != "GET":
-                self.send_code(http_type, 405, path)
+                self.handle_405(http_type, 405, path)
                 return
 
             # Handles if it is a GET request
@@ -86,20 +87,26 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
                 # makes sure that the path actually exists
                 if os.path.exists(path):
-                    self.send_code(http_type, 200, path)
+                    if not (path.endswith('/')):
+                        self.redirect_301(http_type, 301, path)
+
+
+                    else:
+                        self.handle_200(http_type, 200, path)
 
 
 
                 else:
-                    self.send_code(http_type, 404, path)
+                    self.handle_404(http_type, 404, path)
 
 
 
         # Handles if there is an error in parse_request
         else:
-            print("Request could not be parsed properly")
+            #print(parsed_request)
+          #  print("Request could not be parsed properly")
             http_type = "HTTP/1.1"
-            self.send_code(http_type, 404, path)
+            self.handle_404(http_type, 404, path)
             return
 
 
@@ -109,14 +116,18 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
 
 
-        #self.request.sendall(bytearray("OK",'utf-8'))
+        
 
 #https://github.com/python/cpython/blob/master/Lib/http/server.py#L147
     def parse_request(self, request):
         # # splits the request on
         # parsed_request = request.split()
         # return parsed_request
+       # print('this is the request')
+       # print(request)
         parsed_request = request.split()
+      #  print('this is the split request')
+       # print(parsed_request)
 
         if len(parsed_request) == 0:
             return False
@@ -134,88 +145,89 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #print(parsed_request)
         return parsed_request
 
-
-
-    def send_code(self, version, code, path):
-        # HTTP 1.1, 404
-
-        # Handle 405
-        if code == 405:
-            output = (("%s %d %s\r\n" %
-                    (version, code, "Method Not Allowed")).encode(
-                        'latin-1', 'strict'))
-
-        # Handle 404
-        elif code == 404:
-            output = (("%s %d %s\r\n" %
-                    (version, code, "Not Found")).encode(
-                        'latin-1', 'strict'))
-
-        # Handle 200
-        elif code == 200:
-            # is the path a file ?
-            if os.path.isfile(path):
-                file = open(path)
-                file_data = file.read()
-                file.close()
-
-            # mime types can only be .css or HTML according to specs
-                if path.endswith(".css"):
-                    #print("handle 200 right here ")
-                    #print("trying to handle CSS")
-                    output = ((("%s %d OK\r\n" %
-                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
-                                'latin-1', 'strict'))
-
-                elif path.endswith(".html"):
-                    #print('handle 200 right here for html')
-                #    print("trying to handle HTML")
-                    output = ((("%s %d OK\r\n" %
-                            (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
-                                'latin-1', 'strict'))
-
-                else:
-                    # send 404 code if we can't recognize the file
-                    output = (("%s %d %s\r\n" %
-                            (version, 404, "Not Found")).encode(
-                                'latin-1', 'strict'))
-
-# bad practice in how i'm handling this , should probably the way program finds file vs. directory and have a seperate function to send codes
-# will fix after
-            elif os.path.isdir(path):
-                if not (path.endswith('/')):
-                    self.redirect_301(version, 301, path)
-                    return
-
-                path = path + ("/index.html")
-                if os.path.isfile(path):
-                    file = open(path)
-                    file_data = file.read()
-                    file.close()
-
-                    output = ((("%s %d OK\r\n" %
-                            (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
-                                'latin-1', 'strict'))
-                else:
-                    output = (("%s %d %s\r\n" %
-                            (version, 404, "Not Found")).encode(
-                                'latin-1', 'strict'))
-
-
-
-
-        self.request.sendall(output)
-
 # handle 301
     def redirect_301(self, version, code, path):
         path = path + '/'
         output = ((("%s %d Moved Permanently\r\n" %
                  (version, code))+ ("Location %s\n\n" % path)).encode(
-                     "'latin-1', 'strict'"))
+                     'latin-1', 'strict'))
 
         self.request.sendall(output)
         #self.handle_200(version, code, path)
         return
+
+
+# handle 405
+    def handle_405(self, version, code, path):
+        output = (("%s %d %s\r\n" %
+                    (version, code, "Method Not Allowed")).encode(
+                        'latin-1', 'strict'))
+        self.request.sendall(output)
+        return
+
+# handle 404
+    def handle_404(self, version, code, path):
+        output = (("%s %d %s\r\n" %
+                    (version, code, "Not Found")).encode(
+                        'latin-1', 'strict'))
+        self.request.sendall(output)
+        return
+    
+    def handle_200(self, version, code, path):
+        # is the path a file ?
+        output = None
+        if os.path.isfile(path):
+            file = open(path)
+            file_data = file.read()
+            file.close()
+        # mime types can only be .css or HTML according to specs
+            if path.endswith(".css"):
+                output = ((("%s %d OK\r\n" %
+                        (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
+                            'latin-1', 'strict'))
+
+            elif path.endswith(".html"):
+                #print('handle 200 right here for html')
+            #    print("trying to handle HTML")
+                output = ((("%s %d OK\r\n" %
+                            (version, code))+  "Content-Type: text/css\n\n" + file_data).encode(
+                                'latin-1', 'strict'))
+
+            else:
+                # send 404 code if we can't recognize the file
+                self.handle_404(version, code, path)
+        
+
+
+        # if path is a directory 
+        elif os.path.isdir(path):
+
+            # if (not(path.endswith('/'))):
+            #     output = ((("%s %d Moved Permanently\r\n" %
+            #             (version, 301)) + ("Location: %s\n\n" % (path + '/'))).encode(
+            #                 'latin-1', 'strict'))
+            # else:
+            path = path + ("/index.html")
+            if os.path.isfile(path):
+                file = open(path)
+                file_data = file.read()
+                file.close()
+
+                output = ((("%s %d OK\r\n" %
+                        (version, code))+  "Content-Type: text/html\n\n" + file_data).encode(
+                            'latin-1', 'strict'))
+
+        else:
+            self.handle_404(version, code, path)
+
+        
+
+        if output != None:
+            self.request.sendall(output)
+        # else:
+        #     self.handle_404(version, code, path)
+        return
+
 
 
 
